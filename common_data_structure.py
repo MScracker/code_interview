@@ -11,8 +11,8 @@ from collections import deque
 def obj_to_string(obj, cls):
     """
     简单地实现类似对象打印的方法
-    :param cls: 对应的类(如果是继承的类也没有关系，比如A(object), cls参数传object一样适用，如果你不想这样，可以修改第一个if)
     :param obj: 对应类的实例
+    :param cls: 对应的类(如果是继承的类也没有关系，比如A(object), cls参数传object一样适用，如果你不想这样，可以修改第一个if)
     :return: 实例对象的to_string
     """
     if not isinstance(obj, cls):
@@ -21,7 +21,7 @@ def obj_to_string(obj, cls):
     items = obj.__dict__
     n = 0
     for k in items:
-        if k.startswith("_") or isinstance(items[k], cls):
+        if k.startswith("_"):  # or isinstance(items[k], cls):
             continue
         to_string = to_string + str(k) + "=" + str(items[k]) + ","
         n += 1
@@ -30,14 +30,15 @@ def obj_to_string(obj, cls):
     return to_string.rstrip(",") + ")"
 
 
-class LinkNode:
+class ListNode:
 
     def __init__(self, data):
-        self.data = data
+        self.val = data
         self.next = None
 
     def __repr__(self):
-        return str(self.data)
+        return obj_to_string(self, ListNode)
+
 
 class Graph:
 
