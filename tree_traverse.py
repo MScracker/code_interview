@@ -77,6 +77,22 @@ def level_traverse_bfs(root):
     return visited
 
 
+def level_recursive_traverse(root):
+    result = {}
+
+    def recursive(root, depth, result):
+        if root is None:
+            return
+        if depth > len(result):
+            result[depth - 1] = []
+        result[depth - 1].append(root.val)
+        recursive(root.left, depth + 1, result)
+        recursive(root.right, depth + 1, result)
+
+    recursive(root, 1, result)
+    return result
+
+
 def max_depth(root):
     """
     :type root: TreeNode
@@ -98,6 +114,7 @@ if __name__ == '__main__':
 
     print "层次遍历(广度优先遍历):"
     print level_traverse_bfs(tree.root)
+    print level_recursive_traverse(tree.root)
     print "前序遍历(深度优先遍历)："
     print preorder(tree.root)
     print "中序遍历："
