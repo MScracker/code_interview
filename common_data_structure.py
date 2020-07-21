@@ -94,9 +94,9 @@ def pretty_print(tree):
                     current_level, next_level = next_level, current_level
                     depth = depth + 1
                 output.write(u'\n')
-    print('the tree print level by level is :')
-    print(output.getvalue())
-    print("current tree's depth is %i" % (depth + 1))
+    # print('the tree print level by level is :')
+    # # print(output.getvalue())
+    # print("current tree's depth is %i" % (depth + 1))
 
     # add space to each node
     output.seek(0)
@@ -120,10 +120,10 @@ def pretty_print(tree):
 
         # add space and slashes to middle layer
         slashes_depth = spaces
-        print('current slashes depth im_resize:')
-        print(spaces)
-        print("current levle's list is:")
-        print(keys)
+        # print('current slashes depth im_resize:')
+        # print(spaces)
+        # print("current levle's list is:")
+        # print(keys)
         spaces = spaces // 2
         if spaces > 0:
             pretty_output.write(u'\n')  # print '\n' each level
@@ -181,10 +181,33 @@ class TreeNode:
         self.right = None
 
     def __str__(self):
-        return obj_to_string(self, TreeNode)
+        to_string = str(self.__class__.__name__) + "("
+        if self:
+            if not self.left:
+                to_string += 'left = None'
+            else:
+                to_string += 'left = .'
+            to_string += ', val:' + str(self.val) + ', '
+            if not self.right:
+                to_string += 'right = None)'
+            else:
+                to_string += 'right = .）'
+            return to_string
+        # return obj_to_string(self, TreeNode)
 
     def __repr__(self):
-        return 'TreeNode(..., val:' + str(self.val) + ', ...)'
+        to_string = str(self.__class__.__name__) + "("
+        if self:
+            if not self.left:
+                to_string += 'left = None'
+            else:
+                to_string += 'left = .'
+            to_string += ', val:' + str(self.val) + ', '
+            if not self.right:
+                to_string += 'right = None)'
+            else:
+                to_string += 'right = .）'
+            return to_string
 
 
 class Tree:
