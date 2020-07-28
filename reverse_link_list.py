@@ -11,10 +11,10 @@ for i in range(5):
 def reverseLinkList(head):
     if head == None or head.next == None:
         return head
-    p = reverseLinkList(head.next)
-    head.next.next = head
-    head.next = None
-    return p
+    tail = reverseLinkList(head.next) #获取尾节点
+    head.next.next = head #head为尾节点, 指向前一节点
+    head.next = None #删除原正序连接
+    return tail
 
 
 def recursiveReverseLinkList(head):

@@ -35,16 +35,32 @@ def obj_to_string(obj, cls):
 def build_tree_from_list(values):
     def recursive(root, values, depth):
         if not values:
-            raise Exception('value list is is_empty')
-        if depth < len(values):
-            if values[depth] is None:
-                return None
-            else:
-                if root is None:
-                    root = TreeNode(values[depth])
-                root.left = recursive(root.left, values, 2 * depth + 1)
-                root.right = recursive(root.right, values, 2 * depth + 2)
-            return root
+            raise Exception('value list is is empty!')
+        if depth > len(values):
+            return
+
+        if values[depth] is None:
+            return
+        else:
+            if root is None:
+                root = TreeNode(values[depth])
+            root.left = recursive(root.left, values, 2 * depth + 1)
+            root.right = recursive(root.right, values, 2 * depth + 2)
+        return root
+
+    return recursive(None, values, 0)
+
+
+def build_linklist_from_list(values):
+    def recursive(head, values, depth):
+        if not values:
+            raise Exception('value list is empty!')
+        if depth >= len(values):
+            return None
+        if head is None:
+            head = ListNode(values[depth])
+        head.next = recursive(head.next, values, depth + 1)
+        return head
 
     return recursive(None, values, 0)
 
@@ -149,9 +165,18 @@ class ListNode:
         self.val = data
         self.next = None
 
-    def __repr__(self):
+    def __str__(self):
         return obj_to_string(self, ListNode)
 
+    def __repr__(self):
+        to_string = str(self.__class__.__name__) + "("
+        if self:
+            to_string += 'val:' + str(self.val) + ', '
+            if not self.next:
+                to_string += 'next = None)'
+            else:
+                to_string += 'next =.)'
+            return to_string
 
 class Graph:
 
