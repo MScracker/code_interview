@@ -137,3 +137,25 @@ def deleteNode(head, val):
         while pcur.next.val != val:
             pcur = pcur.next
         pcur.next = None
+
+'''
+Leetcode 分割链表
+'''
+def partition(head, x):
+    """
+    :type head: ListNode
+    :type x: int
+    :rtype: ListNode
+    """
+    pre, cur = head, head
+    while cur:
+        if cur.val < x:
+            pre.val, cur.val = cur.val, pre.val
+            pre = pre.next
+        cur = cur.next
+    return head
+
+head = build_linklist_from_list([1,4,3,2,5,2])
+
+x = partition(head, 3)
+print x

@@ -166,17 +166,32 @@ class ListNode:
         self.next = None
 
     def __str__(self):
-        return obj_to_string(self, ListNode)
+        to_string = ''
+        items = self.__dict__
+        n = 0
+        for k in items:
+            if k.startswith("_"):
+                continue
+            to_string += str(items[k]) + " -> "
+            n += 1
+        if n == 0:
+            to_string += str(self.__class__.__name__).lower() + ": 'Instantiated objects have no property values'"
+        return to_string.rstrip(" -> ")
 
     def __repr__(self):
-        to_string = str(self.__class__.__name__) + "("
-        if self:
-            to_string += 'val:' + str(self.val) + ', '
-            if not self.next:
-                to_string += 'next = None)'
-            else:
-                to_string += 'next =.)'
-            return to_string
+        # to_string = ''
+        # items = self.__dict__
+        # n = 0
+        # for k in items:
+        #     if k.startswith("_"):
+        #         continue
+        #     to_string += str(items[k]) + " -> "
+        #     n += 1
+        # if n == 0:
+        #     to_string += str(self.__class__.__name__).lower() + ": 'Instantiated objects have no property values'"
+        # return to_string.rstrip(" -> ")
+        return obj_to_string(self, ListNode)
+
 
 class Graph:
 
