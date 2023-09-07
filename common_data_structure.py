@@ -1,10 +1,7 @@
 # -- coding: UTF-8 --
 # @since : 2020-03-14 14:31
 # @author : wongleon
-import sys
 
-reload(sys)
-sys.setdefaultencoding('utf8')
 from collections import deque
 from io import StringIO
 import math
@@ -33,22 +30,46 @@ def obj_to_string(obj, cls):
 
 
 def build_tree_from_list(values):
-    def recursive(root, values, depth):
+    def recursive(values, index):
         if not values:
             raise Exception('value list is is empty!')
-        if depth > len(values):
+        if index >= len(values):
             return
 
-        if values[depth] is None:
+        if values[index] is None:
             return
         else:
-            if root is None:
-                root = TreeNode(values[depth])
-            root.left = recursive(root.left, values, 2 * depth + 1)
-            root.right = recursive(root.right, values, 2 * depth + 2)
+            root = TreeNode(values[index])
+            root.left = recursive(values, 2 * index + 1)
+            root.right = recursive(values, 2 * index + 2)
         return root
 
-    return recursive(None, values, 0)
+    return recursive(values, 0)
+
+def build_tree_by_level(values):
+    if not values:
+        return
+    root = TreeNode(values[0])
+
+    queue = deque()
+    queue.append(root)
+    i = 1
+    while i < len(values):
+
+        cur_node = queue.popleft()
+        if values[i]:
+            cur_node.left = TreeNode(values[i])
+            queue.append(cur_node.left)
+        i += 1
+        if i >= len(values):
+            break
+
+        if values[i]:
+            cur_node.right = TreeNode(values[i])
+            queue.append(cur_node.right)
+        i += 1
+
+    return root
 
 
 def build_linklist_from_list(values):
@@ -98,7 +119,7 @@ def pretty_print(tree):
     if tree:
         while not current_level.isEmpty():
             current_node = current_level.dequeue()
-            output.write('%s ' % unicode(current_node.val) if current_node else u'N ')
+            output.write('%s ' % (current_node.val) if current_node else ' ')
             next_level.enqueue(
                 current_node.left if current_node else current_node)
             next_level.enqueue(
@@ -147,11 +168,18 @@ def pretty_print(tree):
             cnt = 0
             while cnt < slashes_depth:
                 inter_symbol_spacing = u' ' * (pad_length + 2 * cnt)
-                symbol = ''.join([u'/', inter_symbol_spacing, u'\\'])
+                if keys[0] != "":
+                    symbol = ''.join([u'/', inter_symbol_spacing, u'\\'])
+                else:
+                    symbol = ''.join([u' ', inter_symbol_spacing, u' '])
                 symbol_start_spacing = u' ' * (skip_start - cnt - 1)
                 symbol_mid_spacing = u' ' * (skip_mid - 2 * (cnt + 1))
                 pretty_output.write(u''.join([symbol_start_spacing, symbol]))
-                for i in keys[1:-1]:
+                for key in keys[1:-1]:
+                    if key != "":
+                        symbol = ''.join([u'/', inter_symbol_spacing, u'\\'])
+                    else:
+                        symbol = ''.join([u' ', inter_symbol_spacing, u' '])
                     pretty_output.write(u''.join([symbol_mid_spacing, symbol]))
                 pretty_output.write(u'\n')
                 cnt = cnt + 1
@@ -161,9 +189,9 @@ def pretty_print(tree):
 
 class ListNode:
 
-    def __init__(self, data):
+    def __init__(self, data, next = None):
         self.val = data
-        self.next = None
+        self.next = next
 
     def __str__(self):
         to_string = ''
@@ -215,10 +243,10 @@ class Graph:
 
 
 class TreeNode:
-    def __init__(self, val):
+    def __init__(self, val, left=None, right=None):
         self.val = val
-        self.left = None
-        self.right = None
+        self.left = left
+        self.right = right
 
     def __str__(self):
         to_string = str(self.__class__.__name__) + "("
@@ -273,11 +301,11 @@ class Tree:
 
 if __name__ == '__main__':
     tree = Tree()
-    for i in xrange(5):
-        print i
+    for i in range(5):
+        print(i)
         tree.build_tree(i)
 
     node = TreeNode(1)
     node.left = TreeNode(2)
     node.right = TreeNode(3)
-    print node
+    print(node)

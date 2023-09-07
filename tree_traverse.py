@@ -76,7 +76,9 @@ def level_traverse_bfs(root):
             queue.append(p.right)
     return visited
 
-
+'''
+树层次遍历
+'''
 def level_recursive_traverse(root):
     result = {}
 

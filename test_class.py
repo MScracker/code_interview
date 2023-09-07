@@ -9,12 +9,13 @@ class People(object):
     # 类变量
     total = 0
 
-    def __init__(self, name, age):
+    def __init__(self, name, age, country="US"):
         # 调用父类的初始化函数
         super(People, self).__init__()
         # 初始化当前类对象的一些属性
         self.name = name
         self.age = age
+        self.country = country
 
     # 对象函数 只能由对象调用
     def eat(self):
@@ -39,14 +40,26 @@ class People(object):
         print('跑步%s分钟....' % time)
 
 
-# 对象函数只能由对象调用
-# 类函数由类调用、也可以用对象调用
-People.work(10)
-p1 = People('张三', 22)
-p1.work(10)
 
-# 调用静态函数
-# 类调用静态函数
-People.run(100)
-# 对象调用静态函数
-p1.run(50)
+class Tom(People):
+
+    def __init__(self, name, age, gender, **kwargs):
+        super().__init__(name, age, **kwargs)
+        self.gender = gender
+
+
+
+# # 对象函数只能由对象调用
+# # 类函数由类调用、也可以用对象调用
+# People.work(10)
+# p1 = People('张三', 22)
+# p1.work(10)
+
+# # 调用静态函数
+# # 类调用静态函数
+# People.run(100)
+# # 对象调用静态函数
+# p1.run(50)
+
+tom = Tom('tom', 30, 'F')
+print()
