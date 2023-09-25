@@ -1,9 +1,292 @@
 import math
 from pprint import pprint
 from typing import List, Optional, Set
-
+from collections import OrderedDict
 import common_data_structure
 from common_data_structure import TreeNode, build_tree_from_list, pretty_print, ListNode
+import sys
+
+# 无重复字符的最长子串
+def lengthOfLongestSubstring(s: str) -> int:
+    max_len = 0
+    from collections import defaultdict
+    lookup = defaultdict(int) # 当前子串字符及个数
+    head = 0 # 头指针
+    repeat = 0  # 重复字符总个数
+    for tail in range(len(s)):
+        # 初始化lookup，更新条件repeat标志位
+        lookup[s[tail]] += 1
+        if lookup[s[tail]] > 1:
+            # 1个及以上即存在重复字符
+            repeat += 1
+        # repeat不满足条件：s[head,tail]有重复字符
+        # 头指针尽可能保守右移，一旦满足条件就跳出循环
+        while repeat > 0:
+            if lookup[s[head]] > 1:
+                # 只有当s[head]数量达到两个以上时，确保跳出循环时保证s[head, tail]满足无重复字符
+                repeat -= 1
+            # 头指针尽右移并更新lookup
+            lookup[s[head]] -= 1
+            head += 1
+        # while循环外更新不重复子串最大长度
+        max_len = max(max_len, tail - head + 1)
+    return max_len
+
+# 反转链表
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        prev = None
+        pcur = head
+        while pcur:
+            tmp = pcur.next # 保留下一节点
+            pcur.next = prev # 将当前节点指向前一节点
+            prev = pcur # 当前节点赋成前一节点
+            pcur = tmp # 再将下一节点赋成当前节点
+        return prev
+
+# LRU缓存 最近最少使用缓存
+# 解法：哈希表 + 双向链表
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+
+    def get(self, key: int) -> int:
+        if key in self.cache:
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        else:
+            return -1
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            self.cache.move_to_end(key)
+            self.cache[key] = value
+        else:
+            self.cache[key] = value
+
+        while len(self.cache) > self.capacity:
+            self.cache.popitem(last=False)
+# Your LRUCache object will be instantiated and called as such:
+# obj = LRUCache(capacity)
+# param_1 = obj.get(key)
+# obj.put(key,value)
+
+# 全排列
+# 回溯法
+def permute(nums: List[int]) -> List[List[int]]:
+
+    n = len(nums)
+    ans = []
+    path = []
+    # 记录每个数使用情况
+    used = [False] * n
+    def backtrace(nums, used):
+        if len(path) == n:
+            ans.append(path[:])
+            return
+
+        for i in range(n):
+            if used[i]:
+                continue
+            path.append(nums[i])
+            used[i] = True
+            backtrace(nums, used)
+            # 回撤，撤销操作
+            used[i] = False
+            path.pop()
+
+    backtrace(nums, used)
+    return ans
+
+
+# 合并两个有序数组
+# 逆向双指针：不使用临时数组
+def merge(nums1: List[int], m: int, nums2: List[int], n: int) -> None:
+    """
+    Do not return anything, modify nums1 in-place instead.
+    """
+    i = m - 1
+    j = n - 1
+    k = m + n - 1
+    while k >= 0:
+        if j < 0:
+            nums1[k] = nums1[i]
+            i -= 1
+        elif i < 0:
+            nums1[k] = nums2[j]
+            j -= 1
+        elif nums1[i] > nums2[j]:
+            nums1[k] = nums1[i]
+            i -= 1
+        else:
+            nums1[k] = nums2[j]
+            j -= 1
+
+        k -= 1
+
+# 数组中的第K个最大元素
+# 基于快速排序的选择方法
+def findKthLargest(nums: List[int], k: int) -> int:
+    def partition(nums, left, right):
+        pivot = nums[left]
+        # all in nums[left+1...i) >= pivot 注意开闭区间
+        # all in nums(j, right] <= pivot 注意开闭区间
+        i = left + 1
+        j = right
+        # 排列从大到小，保证pivot的左区间大于右区间
+        while True:
+            while i <= j and pivot > nums[j]:
+                j -= 1
+            while i <= j and pivot < nums[i]:
+                i += 1
+
+            if i >= j:
+                break
+
+            nums[i], nums[j] = nums[j], nums[i]
+
+            # 交换完向内收缩
+            i += 1
+            j -= 1
+
+        # 交换pivot和右区间的最后一个值(j<i)
+        nums[j], nums[left] = nums[left], nums[j]
+        return j
+
+    def quick_select(nums, left, right, target_index):
+        q = partition(nums, left, right)
+        if q == target_index:
+            return nums[q]
+        elif q < target_index:
+            return quick_select(nums, q + 1, right, target_index)
+        else:
+            return quick_select(nums, left, q - 1, target_index)
+
+    return quick_select(nums, 0, len(nums) - 1, k - 1)
+
+# 快速排序 快排：从小到大
+# 通过划分将待排序的序列分成前后两部分，其中前一部分的数据都比后一部分的数据要小，然后再递归调用函数对两部分的序列分别进行快速排序，以此使整个序列达到有序
+# 快速排序: 随机选择pivot，避免算法从o(nlogn)退化成o(n^2), 防止避免大量相同值
+def sortArray(nums: List[int]) -> List[int]:
+    import random
+    def partition(nums, left, right):
+        ridx = random.randint(left, right)
+        nums[left], nums[ridx] = nums[ridx], nums[left]
+        pivot = nums[left]
+        # all in nums[left+1...i) <= pivot 注意开闭区间
+        # all in nums(j, right] >= pivot 注意开闭区间
+        i = left + 1  # 左指针
+        j = right  # 右指针
+        while True:
+            # 寻找第一个大于等于pivot的值
+            while i <= j and nums[i] < pivot:
+                i += 1
+            # 寻找第一个小于等于pivot的值
+            while i <= j and nums[j] > pivot:
+                j -= 1
+
+            # nums[i] 第一个大于等于pivot的值
+            # nums[j] 第一个小于等于pivot的值
+            if i >= j:
+                break
+
+            nums[i], nums[j] = nums[j], nums[i]
+            # 交换完向内收缩
+            i += 1
+            j -= 1
+
+        # 交换pivot和右区间的最后一个值(j<i)
+        nums[left], nums[j] = nums[j], nums[left]
+        return j
+
+    def quick_sort(nums, left, right):
+        if left >= right:
+            return
+        pos = partition(nums, left, right)
+        quick_sort(nums, left, pos - 1)
+        quick_sort(nums, pos + 1, right)
+
+    quick_sort(nums, 0, len(nums) - 1)
+    return nums
+
+# 归并排序：从小到大
+def sortArray2(nums: List[int]) -> List[int]:
+    def merge(left, mid, right, temp):
+        for i in range(left, right + 1):
+            temp[i] = nums[i]
+        i = left
+        j = mid + 1
+        for k in range(left, right + 1):
+            if i == mid + 1:
+                nums[k] = temp[j]
+                j += 1
+            elif j == right + 1:
+                nums[k] = temp[i]
+                i += 1
+            elif temp[i] <= temp[j]:
+                nums[k] = temp[i]
+                i += 1
+            else:
+                nums[k] = temp[j]
+                j += 1
+
+    def partition(nums, left, right, temp):
+        if left == right:
+            return
+
+        mid = (left + right) // 2
+        # 分
+        partition(nums, left, mid, temp)
+        partition(nums, mid + 1, right, temp)
+        # 合
+        merge(left, mid, right, temp)
+
+    temp = [0] * len(nums)
+    partition(nums, 0, len(nums) - 1, temp)
+    return nums
+
+# K个一组翻转链表
+
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(val=0, next=None):
+#         self.val = val
+#         self.next = next
+def reverseKGroup(head: Optional[ListNode], k: int) -> Optional[ListNode]:
+    def reverse(head, tail):
+        p = head
+        prev = tail.next
+        while prev != tail:
+            pnext = p.next
+            p.next = prev
+            prev = p
+            p = pnext
+        return tail, head
+
+    dummy = ListNode(-1, head)
+    prev = dummy
+    start = head
+    end = prev
+    while start:
+        # 查看剩余部分长度是否大于等于 k
+        for i in range(k):
+            end = end.next
+            if end == None:
+                return dummy.next
+        nxt = end.next
+        start, end = reverse(start, end)
+        # 把子链表重新接回原链表
+        prev.next = start
+        end.next = nxt
+        prev = end
+        start = nxt
+    return dummy.next
 
 # 二分法
 def search(nums: List[int], target: int) -> int:
@@ -110,6 +393,234 @@ def four_sum(nums, target):
                         ans.add(tuple(sorted([nums[i], nums[j], nums[k], val])))
     return ans
 
+# 最大子数组和
+# 给你一个整数数组 nums ，请你找出一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+# 子数组 是数组中的一个连续部分。
+def maxSubArray(nums: List[int]) -> int:
+    # dp[i] = max(dp[i - 1] + nums[i], nums[i])
+    n = len(nums)
+    if n <= 0:
+        return 0
+
+    # dp[i]表示从0到i的子序列中最大序列和的值
+    dp = [0] * n
+    dp[0] = nums[0]
+    for i in range(1, n):
+        # dp[i] = max(dp[i - 1] + nums[i], nums[i])
+        if dp[i - 1] > 0:
+            dp[i] = dp[i - 1] + nums[i]
+        else:
+            dp[i] = nums[i]
+    return max(dp)
+
+# 合并两个有序链表
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+# 递归法
+def mergeTwoLists(l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+    if l1 is None:
+        return l2
+    elif l2 is None:
+        return l1
+    elif l1.val < l2.val:
+        l1.next = mergeTwoLists(l1.next, l2)
+        return l1
+    else:
+        l2.next = mergeTwoLists(l1, l2.next)
+        return l2
+
+# 迭代法
+def mergeTwoLists(list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+    new_link = ListNode(-1)
+    p = new_link
+    p1 = list1
+    p2 = list2
+    while p1 and p2:
+        if p1.val <= p2.val:
+            p.next = ListNode(p1.val)
+            p1 = p1.next
+        else:
+            p.next = ListNode(p2.val)
+            p2 = p2.next
+        p = p.next
+
+    while p2:
+        p.next = ListNode(p2.val)
+        p2 = p2.next
+        p = p.next
+
+    while p1:
+        p.next = ListNode(p1.val)
+        p1 = p1.next
+        p = p.next
+
+    return new_link.next
+
+# 最长回文子串
+# 中心扩散法
+def longestPalindrome(s: str) -> str:
+    def center_expand(s, left, right):
+        while left <= right and left >= 0 and right < len(s) and s[left] == s[right]:
+            left -= 1
+            right += 1
+
+        return left + 1, right - 1
+
+    maxlen = 0
+    start = 0
+    end = 0
+    for i in range(len(s) - 1):
+        start1, end1 = center_expand(s, i, i)
+        start2, end2 = center_expand(s, i, i + 1)
+
+        if maxlen < end1 - start1:
+            maxlen = end1 - start1
+            start = start1
+            end = end1
+
+        if maxlen < end2 - start2:
+            maxlen = end2 - start2
+            start = start2
+            end = end2
+
+    return s[start: end + 1]
+
+# 动态规划法
+def longestPalindrome2(s: str) -> str:
+    # dp[i][j]表示s[i...j]是否为回文串
+    n = len(s)
+    max_length = 1
+    ans = s[0]
+
+    dp = [[False] * n for _ in range(n)]
+    for i in range(n):
+        dp[i][i] = True
+
+    for i in range(n - 1, -1, -1):
+        for j in range(i + 1, n):
+            if s[i] != s[j]:
+                dp[i][j] = False
+            else:
+                if i + 1 < j - 1:
+                    dp[i][j] = dp[i + 1][j - 1]
+                else:
+                    dp[i][j] = True
+
+            if dp[i][j] and j - i + 1 > max_length:
+                max_length = j - i + 1
+                ans = s[i: j + 1]
+    return ans
+
+# 搜索旋转排序数组
+# 整数数组 nums 按升序排列，数组中的值 互不相同 。
+# 在传递给函数之前，nums 在预先未知的某个下标 k（0 <= k < nums.length）上进行了旋转，
+# 使数组变为 [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]（下标 从 0 开始 计数）。
+# 例如， [0,1,2,4,5,6,7] 在下标3处经旋转后可能变为 [4,5,6,7,0,1,2] 。
+# 解法二分查找
+# 我们将数组从中间分开成左右两部分的时候，一定有一部分的数组是有序的，根据有序的那个部分确定我们该如何改变二分查找的上下界
+def search(nums: List[int], target: int) -> int:
+
+    left = 0
+    right = len(nums) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            return mid
+
+        if nums[left] <= nums[mid]:
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+        else:
+            if nums[mid] < target <= nums[right]:
+                left = mid + 1
+            else:
+                right = mid - 1
+
+    return -1
+
+# 岛屿数量
+# 深度优先搜索
+# 我们可以将二维网格看成一个无向图，竖直或水平相邻的1之间有边相连。
+# 为了求出岛屿的数量，我们可以扫描整个二维网格。如果一个位置为1，则以其为起始节点开始进行深度优先搜索。在深度优先搜索的过程中，每个搜索到的1都会被重新标记为0。
+# 最终岛屿的数量就是我们进行深度优先搜索的次数
+# 链接：https://leetcode.cn/problems/number-of-islands/
+def numIslands(grid: List[List[str]]) -> int:
+    ans = 0
+    num_row = len(grid)
+    num_col = len(grid[0])
+
+    def dfs(grid, r, c):
+        if not 0 <= r < num_row or not 0 <= c < num_col:
+            return
+
+        if grid[r][c] != '1':
+            return
+
+        grid[r][c] = '2'
+        # 上
+        dfs(grid, r - 1, c)
+        # 下
+        dfs(grid, r + 1, c)
+        # 左
+        dfs(grid, r, c - 1)
+        # 右
+        dfs(grid, r, c + 1)
+
+    for r in range(num_row):
+        for c in range(num_col):
+            if grid[r][c] == '1':
+                ans += 1
+                dfs(grid, r, c)
+
+    return ans
+
+# 环形链表：快慢指针
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+def hasCycle(head: Optional[ListNode]) -> bool:
+    if not head or not head.next:
+        return False
+
+    slow = head
+    fast = head
+    while fast.next and fast.next.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            return True
+
+    return False
+
+# 有效的括号
+# 利用栈的先进后出的特性，python中栈的数据结构就是list
+def isValid(s: str) -> bool:
+    n = len(s)
+    if n < 2 or n % 2 != 0:
+        return False
+
+    pairs = {
+        ")": "(",
+        "]": "[",
+        "}": "{",
+    }
+    stack = []
+    for ch in s:
+        if ch in pairs:
+            if not stack or stack[-1] != pairs[ch]:
+                return False
+            stack.pop()
+        else:
+            stack.append(ch)
+    return not stack
+
 # 摆动序列
 def wiggleMaxLength(nums: List[int]) -> int:
     # up i作为波峰最长的序列长度
@@ -129,20 +640,6 @@ def wiggleMaxLength(nums: List[int]) -> int:
             down = max(down, up + 1)
     return max(up, down)
 
-# 最大子序和
-def maxSubArray(nums: List[int]) -> int:
-    if not nums:
-        return
-    # dp[i]表示从0到i的子序列中最大序列和的值
-    dp = [0] * len(nums)
-    dp[0] = nums[0]
-    for i in range(1, len(nums)):
-        if dp[i - 1] > 0:
-            dp[i] = dp[i - 1] + nums[i]
-        else:
-            dp[i] = nums[i]
-    pprint(dp)
-    return max(dp)
 
 # 买卖股票的最佳时机
 def maxProfit1(prices: List[int]) -> int:
@@ -655,33 +1152,6 @@ def rob(nums: List[int]) -> int:
 
     return dp[-1]
 
-# 无重复字符的最长子串
-def lengthOfLongestSubstring(s: str) -> int:
-    max_len = 0
-    from collections import defaultdict
-    lookup = defaultdict(int) # 当前子串字符及个数
-    head = 0 # 头指针
-    repeat = 0  # 重复字符总个数
-    for tail in range(len(s)):
-        # 初始化lookup，更新条件repeat标志位
-        lookup[s[tail]] += 1
-        if lookup[s[tail]] > 1:
-            # 1个及以上即存在重复字符
-            repeat += 1
-        # repeat不满足条件：s[head,tail]有重复字符
-        # 头指针尽可能保守右移，一旦满足条件就跳出循环
-        while repeat > 0:
-            if lookup[s[head]] > 1:
-                # 只有当s[head]数量达到两个以上时，确保跳出循环时保证s[head, tail]满足无重复字符
-                repeat -= 1
-            # 头指针尽右移并更新lookup
-            lookup[s[head]] -= 1
-            head += 1
-        # while循环外更新不重复子串最大长度
-        max_len = max(max_len, tail - head + 1)
-    return max_len
-
-
 # 最长递增子序列
 def lengthOfLIS(nums: List[int]) -> int:
     # dp[i]表示以nums[i]结尾的最长递增子序列的长度
@@ -1163,61 +1633,6 @@ def largestRectangleArea(heights: List[int]) -> int:
         stack.append(i)
     return result
 
-# 最长回文串
-# 中心扩散法
-def longestPalindrome(s: str) -> str:
-    def center_expand(s, left, right):
-        while left <= right and left >= 0 and right < len(s) and s[left] == s[right]:
-            left -= 1
-            right += 1
-
-        return left + 1, right - 1
-
-    maxlen = 0
-    start = 0
-    end = 0
-    for i in range(len(s) - 1):
-        start1, end1 = center_expand(s, i, i)
-        start2, end2 = center_expand(s, i, i + 1)
-
-        if maxlen < end1 - start1:
-            maxlen = end1 - start1
-            start = start1
-            end = end1
-
-        if maxlen < end2 - start2:
-            maxlen = end2 - start2
-            start = start2
-            end = end2
-
-    return s[start: end + 1]
-
-# 动态规划法
-def longestPalindrome2(s: str) -> str:
-    # dp[i][j]表示s[i...j]是否为回文串
-    n = len(s)
-    max_length = 1
-    ans = s[0]
-
-    dp = [[False] * n for _ in range(n)]
-    for i in range(n):
-        dp[i][i] = True
-
-    for i in range(n - 1, -1, -1):
-        for j in range(i + 1, n):
-            if s[i] != s[j]:
-                dp[i][j] = False
-            else:
-                if i + 1 < j - 1:
-                    dp[i][j] = dp[i + 1][j - 1]
-                else:
-                    dp[i][j] = True
-
-            if dp[i][j] and j - i + 1 > max_length:
-                max_length = j - i + 1
-                ans = s[i: j + 1]
-    return ans
-
 # 分割回文串1
 def partition(s: str) -> List[List[str]]:
     result = []
@@ -1270,38 +1685,6 @@ def minCut(s: str) -> int:
 
     return dp[-1]
 
-# 快速排序
-def sortArray(nums: List[int]) -> List[int]:
-
-    def parition(nums, left, right):
-        pivot = nums[right]
-        i = left
-        j = right
-        while i != j:
-            while i < j and nums[i] <= pivot:
-                i += 1
-
-            while i < j and nums[j] >= pivot:
-                j -= 1
-
-            if i < j:
-                nums[i], nums[j] = nums[j], nums[i]
-
-        nums[right] = nums[i]
-        nums[i] = pivot
-        return i
-
-    def quick_select(nums, left, right):
-        if left >= right:
-            return
-        pos = parition(nums, left, right)
-        quick_select(nums, left, pos - 1)
-        quick_select(nums, pos + 1, right)
-
-    n = len(nums)
-    quick_select(nums, 0, n - 1)
-    return nums
-
 # Definition for a binary tree node.
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
@@ -1309,7 +1692,7 @@ def sortArray(nums: List[int]) -> List[int]:
 #         self.left = left
 #         self.right = right
 
-# 二叉树层序遍历
+# 二叉树的层序遍历
 # 利用队列先进先出暂存每层节点
 def levelOrder(root: Optional[TreeNode]) -> List[List[int]]:
     from collections import deque
@@ -1332,6 +1715,33 @@ def levelOrder(root: Optional[TreeNode]) -> List[List[int]]:
                 que.append(ele.right)
         ans.append(res)
 
+    return ans
+
+# 二叉树的锯齿形层序遍历
+# 广度优先遍历：使用队列来维护当前层的所有元素
+def zigzagLevelOrder(root: Optional[TreeNode]) -> List[List[int]]:
+    ans = []
+    from collections import deque
+    res = deque()
+    if not root:
+        return ans
+    res.append(root)
+    depth = 0
+    while res:
+        size = len(res)
+        tmp = deque()
+        for i in range(size):
+            node = res.popleft()
+            if depth % 2 == 0:
+                tmp.append(node.val)
+            else:
+                tmp.appendleft(node.val)
+            if node.left:
+                res.append(node.left)
+            if node.right:
+                res.append(node.right)
+        ans.append(list(tmp))
+        depth += 1
     return ans
 
 # 二叉树中的最大路径和
@@ -1402,6 +1812,98 @@ def intact_pack_problem_1d(pack_capacity: int, capacity: Set[int], value: Set[in
             dp[j] = max(dp[j], dp[j - capacity[i]] + value[i])
 
     return dp[-1]
+
+
+# 打印螺旋矩阵
+def generateMatrix(n: int) -> List[List[int]]:
+    cnt = 1
+    nums = [[0] * n for _ in range(n)]
+    start_x = 0
+    start_y = 0
+    offsert = 1
+
+    for _ in range(n // 2):
+        i = start_x
+        j = start_y
+        while (j < n - offsert):
+            nums[i][j] = cnt
+            cnt += 1
+            j += 1
+
+        while (i < n - offsert):
+            nums[i][j] = cnt
+            cnt += 1
+            i += 1
+
+        while (j > start_y):
+            nums[i][j] = cnt
+            cnt += 1
+            j -= 1
+
+        while (i > start_x):
+            nums[i][j] = cnt
+            cnt += 1
+            i -= 1
+
+        start_y += 1
+        start_x += 1
+        offsert += 1
+
+    if n % 2 != 0:
+        nums[start_x][start_y] = cnt
+
+    return nums
+
+# 长度最小的子数组
+# 解法：滑动窗口的精妙之处在于根据当前子序列和大小的情况，不断调节子序列的起始位置
+# 给定一个含有 n 个正整数的数组和一个正整数 target 。
+# 找出该数组中满足其总和大于等于 target 的长度最小的连续子数组 [numsl, numsl+1, ..., numsr-1, numsr] ，并返回其长度。如果不存在符合条件的子数组，返回 0 。
+# 示例 1：
+# 输入：target = 7, nums = [2,3,1,2,4,3]
+# 输出：2
+# 解释：子数组 [4,3] 是该条件下的长度最小的子数组。
+def minSubArrayLen(target, nums):
+    if sum(nums) < target:
+        return 0
+    min_len = sys.maxsize
+    n = len(nums)
+    head = 0
+    tmp_sum = 0
+    for tail in range(n):
+        tmp_sum += nums[tail]
+        while tmp_sum >= target:
+            min_len = min(min_len, tail - head + 1)
+            tmp_sum -= nums[head]
+            head += 1
+    return min_len
+# 最小覆盖子串
+# 解法：在 s上滑动窗口，通过移动 r指针不断扩张窗口。当窗口包含t全部所需的字符后，如果能收缩，我们就收缩窗口直到得到最小窗口。
+# 给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 ""
+def minWindow(s: 'str', t: 'str') -> 'str':
+    from collections import defaultdict
+    lookup = defaultdict(int)
+    for c in t:
+        lookup[c] += 1
+    start = 0
+    end = 0
+    min_len = float("inf")
+    counter = len(t)  # 所需字母个数
+    res = ""
+    while end < len(s):
+        if lookup[s[end]] > 0:
+            counter -= 1
+        lookup[s[end]] -= 1
+
+        while counter == 0:  # 表示s[start:end]包含t
+            if min_len > end - start + 1:
+                min_len = end - start + 1
+                res = s[start:end + 1]
+            if lookup[s[start]] == 0:  # head再次遇到所需字母，字母个数再次增加准备end下一次左扩
+                counter += 1
+            lookup[s[start]] += 1
+            start += 1
+        end += 1
+    return res
 
 
 a = [1,2,3,4,5]
