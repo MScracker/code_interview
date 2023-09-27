@@ -32,22 +32,57 @@ def lengthOfLongestSubstring(s: str) -> int:
         max_len = max(max_len, tail - head + 1)
     return max_len
 
-# 反转链表
+# 反转链表 1
 # Definition for singly-linked list.
 # class ListNode:
 #     def __init__(self, val=0, next=None):
 #         self.val = val
 #         self.next = next
-class Solution:
-    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+def reverseList(head: Optional[ListNode]) -> Optional[ListNode]:
+    prev = None
+    pcur = head
+    while pcur:
+        tmp = pcur.next # 保留下一节点
+        pcur.next = prev # 将当前节点指向前一节点
+        prev = pcur # 当前节点赋成前一节点
+        pcur = tmp # 再将下一节点赋成当前节点
+    return prev
+
+# 反转链表 2 ：反转链表指定区间
+def reverseBetween(head: Optional[ListNode], left: int, right: int) -> Optional[ListNode]:
+    dummy = ListNode(-1, next=head)
+    p = dummy
+    prev = dummy
+    right_node = None
+
+    for _ in range(left - 1):
+        p = p.next
+        prev = p
+
+    for _ in range(right - left + 1):
+        p = p.next
+        right_node = p
+
+    left_node = prev.next
+    succ = right_node.next
+
+    prev.next = None
+    right_node.next = None
+
+    def reverse(head):
         prev = None
-        pcur = head
-        while pcur:
-            tmp = pcur.next # 保留下一节点
-            pcur.next = prev # 将当前节点指向前一节点
-            prev = pcur # 当前节点赋成前一节点
-            pcur = tmp # 再将下一节点赋成当前节点
-        return prev
+        p = head
+        while p:
+            tmp = p.next
+            p.next = prev
+            prev = p
+            p = tmp
+
+    reverse(left_node)
+    prev.next = right_node
+    left_node.next = succ
+    return dummy.next
+
 
 # LRU缓存 最近最少使用缓存
 # 解法：哈希表 + 双向链表
@@ -1813,6 +1848,43 @@ def intact_pack_problem_1d(pack_capacity: int, capacity: Set[int], value: Set[in
 
     return dp[-1]
 
+# 零钱兑换 ： 01背包问题
+def coinChange(coins: List[int], amount: int) -> int:
+    # dp[j] = min(dp[j], dp[j - capacity[i]] + value[i])
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+    for i in range(len(coins)):
+        for j in range(coins[i], amount + 1):
+            dp[j] = min(dp[j], dp[j - coins[i]] + 1)
+
+    if dp[-1] != float('inf'):
+        return dp[-1]
+    else:
+        return -1
+
+# 爬楼梯
+def climbStairs(n: int) -> int:
+    # if n <= 1:
+    #     return n
+
+    # dp = [0] * (n + 1)
+    # dp[1] = 1
+    # dp[2] = 2
+    # # dp[i] = dp[i - 1] + dp[i - 2]
+    # for i in range(3, n + 1):
+    #     dp[i] = dp[i - 1] + dp[i - 2]
+    # return dp[-1]
+
+    # 动态规划
+    dp = [0] * (n + 1)
+    dp[0] = 1
+    capacity = [1, 2]
+    for j in range(1, n + 1):
+        for i in range(0, len(capacity)):
+            if j >= capacity[i]:
+                dp[j] += dp[j - capacity[i]]
+
+    return dp[-1]
 
 # 打印螺旋矩阵
 def generateMatrix(n: int) -> List[List[int]]:
@@ -1876,6 +1948,7 @@ def minSubArrayLen(target, nums):
             tmp_sum -= nums[head]
             head += 1
     return min_len
+
 # 最小覆盖子串
 # 解法：在 s上滑动窗口，通过移动 r指针不断扩张窗口。当窗口包含t全部所需的字符后，如果能收缩，我们就收缩窗口直到得到最小窗口。
 # 给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 ""
@@ -1905,6 +1978,90 @@ def minWindow(s: 'str', t: 'str') -> 'str':
         end += 1
     return res
 
+# 用栈实现队列
+# 解法：将一个栈当作输入栈，用于压入 push\texttt{push}push 传入的数据；另一个栈当作输出栈，用于 pop\texttt{pop}pop 和 peek\texttt{peek}peek 操作
+from collections import deque
+class MyQueue:
+
+    def __init__(self):
+        self.input_stack = deque()
+        self.output_stack = deque()
+
+    def push(self, x: int) -> None:
+        self.input_stack.append(x)
+
+    def pop(self) -> int:
+        if self.empty():
+            return
+        if len(self.output_stack) == 0:
+            while len(self.input_stack) != 0:
+                self.output_stack.append(self.input_stack.pop())
+        return self.output_stack.pop()
+
+
+    def peek(self) -> int:
+        if len(self.output_stack) == 0:
+            while len(self.input_stack) != 0:
+                self.output_stack.append(self.input_stack.pop())
+        return self.output_stack[-1]
+
+
+    def empty(self) -> bool:
+        return not self.input_stack and not self.output_stack
+
+# Your MyQueue object will be instantiated and called as such:
+# obj = MyQueue()
+# obj.push(x)
+# param_2 = obj.pop()
+# param_3 = obj.peek()
+# param_4 = obj.empty()
+
+# 寻找两个正序数组的中位数
+# 如果 A[k/2−1]<B[k/2−1]，则比 A[k/2−1] 小的数最多只有 A 的前 k/2−1个数和 B 的前 k/2−1 个数，
+# 即比 A[k/2−1] 小的数最多只有 k−2 个，因此 A[k/2−1] 不可能是第 k 个数，A[0] 到 A[k/2−1] 也都不可能是第 k 个数，可以全部排除。
+# 如果 A[k/2−1]>B[k/2−1]，则可以排除 B[0] 到 B[k/2−1]。
+# 如果 A[k/2−1]=B[k/2−1]，则可以归入第一种情况处理。
+def findMedianSortedArrays(nums1: List[int], nums2: List[int]) -> float:
+    def getKthElement(k):
+        """
+        - 主要思路：要找到第 k (k>1) 小的元素，那么就取 pivot1 = nums1[k/2-1] 和 pivot2 = nums2[k/2-1] 进行比较
+        - 这里的 "/" 表示整除
+        - nums1 中小于等于 pivot1 的元素有 nums1[0 .. k/2-2] 共计 k/2-1 个
+        - nums2 中小于等于 pivot2 的元素有 nums2[0 .. k/2-2] 共计 k/2-1 个
+        - 取 pivot = min(pivot1, pivot2)，两个数组中小于等于 pivot 的元素共计不会超过 (k/2-1) + (k/2-1) <= k-2 个
+        - 这样 pivot 本身最大也只能是第 k-1 小的元素
+        - 如果 pivot = pivot1，那么 nums1[0 .. k/2-1] 都不可能是第 k 小的元素。把这些元素全部 "删除"，剩下的作为新的 nums1 数组
+        - 如果 pivot = pivot2，那么 nums2[0 .. k/2-1] 都不可能是第 k 小的元素。把这些元素全部 "删除"，剩下的作为新的 nums2 数组
+        - 由于我们 "删除" 了一些元素（这些元素都比第 k 小的元素要小），因此需要修改 k 的值，减去删除的数的个数
+        """
+
+        index1, index2 = 0, 0
+        while True:
+            # 特殊情况
+            if index1 == m:
+                return nums2[index2 + k - 1]
+            if index2 == n:
+                return nums1[index1 + k - 1]
+            if k == 1:
+                return min(nums1[index1], nums2[index2])
+
+            # 正常情况
+            newIndex1 = min(index1 + k // 2 - 1, m - 1)
+            newIndex2 = min(index2 + k // 2 - 1, n - 1)
+            pivot1, pivot2 = nums1[newIndex1], nums2[newIndex2]
+            if pivot1 <= pivot2:
+                k -= newIndex1 - index1 + 1
+                index1 = newIndex1 + 1
+            else:
+                k -= newIndex2 - index2 + 1
+                index2 = newIndex2 + 1
+
+    m, n = len(nums1), len(nums2)
+    totalLength = m + n
+    if totalLength % 2 == 1:
+        return getKthElement((totalLength + 1) // 2)
+    else:
+        return (getKthElement(totalLength // 2) + getKthElement(totalLength // 2 + 1)) / 2
 
 a = [1,2,3,4,5]
 b = [1,5]
