@@ -1,10 +1,79 @@
 import math
 from pprint import pprint
 from typing import List, Optional, Set
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict, deque
 import common_data_structure
 from common_data_structure import TreeNode, build_tree_from_list, pretty_print, ListNode
 import sys
+
+# 课程学习
+# 广度优先遍历: 拓扑排序中最前面的节点，该节点一定不会有任何入边，也就是它没有任何的先修课程要求。
+# 当我们将一个节点加入答案中后，我们就可以移除它的所有出边，代表着它的相邻节点少了一门先修课程的要求
+def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+    edges = defaultdict(list)
+    # 入度, 全初始化为0
+    indeg = [0] * numCourses
+
+    for info in prerequisites:
+        edges[info[1]].append(info[0])
+        indeg[info[0]] += 1
+
+    # 所有入度为 0 的节点都被放入队列中
+    q = deque([u for u in range(numCourses) if indeg[u] == 0])
+    visited = 0
+
+    while q:
+        visited += 1
+        u = q.popleft()
+        # 移除 u 的所有出边，也就是将 u的所有相邻节点的入度减少 1
+        for v in edges[u]:
+            indeg[v] -= 1
+            # 如果某个相邻节点 v 的入度变为 0，那么我们就将 v 放入队列中
+            if indeg[v] == 0:
+                q.append(v)
+    # 如果答案中包含了这 n 个节点，那么我们就找到了一种拓扑排序，否则说明图中存在环，也就不存在拓扑排序了
+    return visited == numCourses
+
+# 深度优先遍历
+# 在每一轮的搜索搜索开始时，我们任取一个「未搜索」的节点开始进行深度优先搜索。
+# 我们将当前搜索的节点 u标记为「搜索中」，遍历该节点的每一个相邻节点 v：
+# 如果 v 为「未搜索」，那么我们开始搜索 v，待搜索完成回溯到 u；
+# 如果 v 为「搜索中」，那么我们就找到了图中的一个环，因此是不存在拓扑排序的；
+# 如果 v 为「已完成」，那么说明 v 已经在栈中了，而 u 还不在栈中，因此 u 无论何时入栈都不会影响到 (u,v) 之前的拓扑关系，以及不用进行任何操作。
+# 当 u 的所有相邻节点都为「已完成」时，我们将 u 放入栈中，并将其标记为「已完成」
+def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+    edges = defaultdict(list)
+    # 0-未搜索 1-搜索中 2-已完成
+    visited = [0] * numCourses
+    result = list()
+    # 不存在环
+    valid = True
+
+    for info in prerequisites:
+        edges[info[1]].append(info[0])
+
+    def dfs(u: int):
+        nonlocal valid
+        visited[u] = 1
+        for v in edges[u]:
+            if visited[v] == 0:
+                dfs(v)
+                # 有环就return
+                if not valid:
+                    return
+            elif visited[v] == 1:
+                # 又碰到就说明有环
+                valid = False
+                return
+        # 表明已搜索，加入结果列表
+        visited[u] = 2
+        result.append(u)
+
+    for i in range(numCourses):
+        if valid and not visited[i]:
+            dfs(i)
+
+    return valid
 
 # 无重复字符的最长子串
 def lengthOfLongestSubstring(s: str) -> int:
@@ -1644,6 +1713,7 @@ def largestRectangleArea(heights: List[int]) -> int:
 
     return ans
 
+# 柱状图中最大的矩形
 # 单调栈精简版
 # 找每个柱子左右侧的第一个高度值小于该柱子的柱子
 # 单调栈：栈顶到栈底：从大到小（每插入一个新的小数值时，都要弹出先前的大数值）
